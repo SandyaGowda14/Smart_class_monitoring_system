@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Class Monitoring</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0b1120;
+  color: #f4f7ff;
+  font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+}
+
+header {
+  padding: 28px 6%;
+  background: #111c30;
+  border-bottom: 1px solid #26344c;
+}
+
+header p, .muted {
+  color: #9cabc3;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: 30px;
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px 18px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: #82adff;
+  color: #0b1120;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card, .panel {
+  background: #151f33;
+  border: 1px solid #293750;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.label {
+  font-size: 13px;
+  color: #9cabc3;
+}
+
+.value {
+  font-size: 27px;
+  font-weight: 750;
+  margin: 17px 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  font-size: 12px;
+  color: #9cabc3;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+h2 {
+  font-size: 18px;
+  margin-top: 0;
+}
+
+.item {
+  padding: 12px;
+  margin-top: 9px;
+  border: 1px solid #293750;
+  border-radius: 9px;
+  color: #aab8ce;
+  font-size: 14px;
+}
+
+.ok {
+  color: #50dfa3;
+}
+
+.warn {
+  color: #ffcc70;
+}
+
+.bad {
+  color: #ff818b;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 11px 0;
+  border-bottom: 1px solid #293750;
+  font-size: 13px;
+}
+
+td:last-child {
+  text-align: right;
+}
+
+footer {
+  margin: 24px 0;
+  color: #9cabc3;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 750px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div style="color:#82adff;letter-spacing:2px;font-size:12px">
+    SMARTCLASS / IOT
+  </div>
+
+  <h1>Smart Class Monitoring</h1>
+
+  <p>Classroom status · Cloud readings · Equipment alerts</p>
+</header>
+
+<main>
+
+  <div class="top">
+    <div>
+      <div id="connection" class="muted">
+        Connecting to ThingSpeak...
+      </div>
+
+      <div id="updated" class="muted"
+           style="font-size:12px;margin-top:7px">
+        Waiting for readings
+      </div>
+    </div>
+
+    <button id="refresh">Refresh readings</button>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="label">Students present</div>
+      <div class="value" id="students">—</div>
+      <div class="note">Field 1</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Electricity</div>
+      <div class="value" id="electricity">—</div>
+      <div class="note">Field 2</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Projector</div>
+      <div class="value" id="projector">—</div>
+      <div class="note">Field 3</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Projector current</div>
+      <div class="value" id="current">—</div>
+      <div class="note">Field 4 · Amperes</div>
+    </div>
+
+  </div>
+
+  <div class="panels">
+
+    <section class="panel">
+      <h2>Classroom alerts</h2>
+
+      <div id="alerts">
+        <div class="item">Waiting for cloud data...</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Sensor readings</h2>
+
+      <table>
+        <tr>
+          <td>Light output</td>
+          <td id="light">—</td>
+        </tr>
+
+        <tr>
+          <td>Energy waste</td>
+          <td id="waste">—</td>
+        </tr>
+
+        <tr>
+          <td>Projector mismatch</td>
+          <td id="mismatch">—</td>
+        </tr>
+
+        <tr>
+          <td>Sensor fault</td>
+          <td id="fault">—</td>
+        </tr>
+
+        <tr>
+          <td>Last cloud record</td>
+          <td id="recordTime">—</td>
+        </tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    Smart Class Monitoring System · ThingSpeak Channel 3547308.
+    Values depend on the data actually sent to ThingSpeak.
+    Old or missing data does not confirm that classroom equipment
+    is functioning correctly.
+  </footer>
+
+</main>
+
+<script>
+const CHANNEL = "3547308";
+
+const $ = id => document.getElementById(id);
+
+const val = x =>
+  x === null || x === undefined || x === ""
+    ? null
+    : Number.isFinite(Number(x))
+      ? Number(x)
+      : null;
+
+const yesNo = x =>
+  x === 1 ? "Yes" : x === 0 ? "No" : "Unknown";
+
+const status = (x, yes, no) =>
+  x === 1 ? yes : x === 0 ? no : "Unknown";
+
+function alertList(items) {
+  $("alerts").replaceChildren();
+
+  for (const [message, kind] of items) {
+    const el = document.createElement("div");
+    el.className = "item " + kind;
+    el.textContent = message;
+    $("alerts").appendChild(el);
+  }
+}
+
+async function refresh() {
+  $("refresh").disabled = true;
+
+  try {
+    const url =
+      `https://api.thingspeak.com/channels/${CHANNEL}/feeds.json?results=1`;
+
+    const res = await fetch(url, { cache: "no-store" });
+
+    if (!res.ok) {
+      throw Error("HTTP " + res.status);
+    }
+
+    const json = await res.json();
+    const feed = json.feeds?.[0];
+
+    if (!feed) {
+      throw Error("No readings found. Check channel privacy.");
+    }
+
+    const [s, e, p, c, l, w, m, fault] =
+      [1, 2, 3, 4, 5, 6, 7, 8].map(
+        i => val(feed["field" + i])
+      );
+
+    const time = new Date(feed.created_at);
+
+    if (!Number.isFinite(time.getTime())) {
+      throw Error("Invalid cloud timestamp");
+    }
+
+    const age = Date.now() - time.getTime();
+    const fresh = age >= -60000 && age <= 120000;
+
+    $("connection").textContent = fresh
+      ? "● Cloud data is fresh"
+      : "● Latest cloud data is stale";
+
+    $("connection").className = fresh ? "ok" : "warn";
+
+    $("updated").textContent =
+      "Checked at " + new Date().toLocaleTimeString();
+
+    $("recordTime").textContent = time.toLocaleTimeString();
+
+    $("students").textContent =
+      s === null ? "Unknown" : s;
+
+    $("electricity").textContent =
+      status(e, "Available", "Unavailable");
+
+    $("projector").textContent =
+      status(p, "Working", "Not working");
+
+    $("current").textContent =
+      c === null ? "Unknown" : c.toFixed(2) + " A";
+
+    $("light").textContent = yesNo(l);
+
+    $("waste").textContent =
+      w === 1 ? "ACTIVE" : w === 0 ? "Clear" : "Unknown";
+
+    $("mismatch").textContent =
+      m === 1 ? "ACTIVE" : m === 0 ? "Clear" : "Unknown";
+
+    $("fault").textContent =
+      fault === 1 ? "ACTIVE" : fault === 0 ? "Clear" : "Unknown";
+
+    const alerts = [];
+
+    if (!fresh) {
+      alerts.push([
+        "Latest reading is old; device connectivity is unconfirmed.",
+        "warn"
+      ]);
+    }
+
+    if (fault === 1) {
+      alerts.push(["Sensor fault flag is active.", "bad"]);
+    }
+
+    if (w === 1) {
+      alerts.push(["Energy-waste flag is active.", "warn"]);
+    }
+
+    if (m === 1) {
+      alerts.push(["Projector mismatch flag is active.", "warn"]);
+    }
+
+    if (e === 0) {
+      alerts.push(["Electricity reported unavailable.", "bad"]);
+    }
+
+    if ([s, e, p].some(x => x === null)) {
+      alerts.push([
+        "One or more required readings are missing.",
+        "warn"
+      ]);
+    }
+
+    if (alerts.length === 0) {
+      alerts.push([
+        "No alert flags are active in the latest record.",
+        "ok"
+      ]);
+    }
+
+    alertList(alerts);
+
+  } catch (err) {
+    $("connection").textContent = "Cloud read failed";
+    $("connection").className = "bad";
+    $("updated").textContent = err.message;
+
+    alertList([
+      [
+        "Could not read ThingSpeak. Check channel privacy and internet connectivity.",
+        "bad"
+      ]
+    ]);
+
+  } finally {
+    $("refresh").disabled = false;
+  }
+}
+
+$("refresh").addEventListener("click", refresh);
+
+refresh();
+
+setInterval(refresh, 20000);
+</script>
+
+</body>
+</html>
